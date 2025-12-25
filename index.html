@@ -58,7 +58,7 @@ font-weight:600;
 ">
 🚖 Vyraz najneskôr o <span id="leaveTime">--:--</span>
 </div>
-<img src="logo.png" alt="PL logo" class="logo">
+<img src="images/logo.png" alt="PL logo" class="logo">
 <h1>TAXAMETER</h1>
 </header>
 
@@ -301,6 +301,15 @@ document.getElementById("btnAddStop").addEventListener("click", async function()
     const costWithClient = totalKmWithClient * rateWithClient;
     const totalCost = costToPickup + costWithClient;
     const recommended = totalCost * 1.2;
+	
+	// === PROVÍZIA + DPH + ZISK ===
+const catalogPrice = parseFloat(document.getElementById("catalogPriceInput").value);
+
+const provision = catalogPrice * 0.20;
+const vat = provision * 0.23;
+const operatorFee = provision + vat;
+
+const profit = catalogPrice - operatorFee - totalCost;
 
     // Aktualizácia UI
     document.getElementById("costs").textContent = totalCost.toFixed(2) + " €";
@@ -372,6 +381,7 @@ document.getElementById("btnTraffic").addEventListener("click", async function()
 <p>Cena z cenníka: <span id="catalogPrice">0 €</span></p>
 <p>Náklady: <span id="costs">0 €</span></p>
 <p>Doporučená cena: <span id="recommended">0 €</span></p>
+<p>Čistý zisk vodiča: <span id="profit">0 €</span></p>
 </section>
 
 <section id="statistics">
@@ -441,6 +451,11 @@ async function calculateRoute(){
     document.getElementById("stat-km").textContent="Ubehnuté km: "+(kmToPickup+kmWithClient).toFixed(2);
     document.getElementById("stat-time").textContent="Čas jazdy: "+(kmWithClient*2).toFixed(0)+" min";
     document.getElementById("stat-cost").textContent="Reálna hodnota 1km: "+(totalCost/(kmToPickup+kmWithClient)).toFixed(2)+" €";
+	document.getElementById("profit").textContent =
+    profit.toFixed(2) + " €";
+	if (profit < 0) {
+    alert("⚠️ Upozornenie: Táto jazda je stratová!");
+}
 }
 
 document.getElementById("btnStart")?.addEventListener("click",calculateRoute);

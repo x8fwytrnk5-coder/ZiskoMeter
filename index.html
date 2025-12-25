@@ -58,7 +58,7 @@ font-weight:600;
 ">
 🚖 Vyraz najneskôr o <span id="leaveTime">--:--</span>
 </div>
-<img src="logo.png" alt="PL logo" class="logo">
+<img src="images/logo.png" alt="PL logo" class="logo">
 <h1>TAXAMETER</h1>
 </header>
 
@@ -398,6 +398,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:
 var vehicleMarker = L.marker([48.146,17.107]).addTo(map);
 var routeLayer = null;
 var waitTime = 0;
+let statsTotalKm = 0;
+let statsTotalMinutes = 0;
+let statsTotalCosts = 0;
+let statsRideCount = 0;
 
 document.getElementById("btnLocate").addEventListener("click", function(){
     if(navigator.geolocation){
@@ -447,8 +451,24 @@ async function calculateRoute(){
     document.getElementById("recommended").textContent=recommended.toFixed(2)+" €";
     document.getElementById("catalogPrice").textContent=catalogPrice.toFixed(2)+" €";
     document.getElementById("costs").className=catalogPrice>=totalCost?"green":"red";
+	const rideKm = kmToPickup + kmWithClient;
+const rideMinutes = kmWithClient * 2; // orientačne
+const rideCost = totalCost;
 
-    document.getElementById("stat-km").textContent="Ubehnuté km: "+(kmToPickup+kmWithClient).toFixed(2);
+statsTotalKm += rideKm;
+statsTotalMinutes += rideMinutes;
+statsTotalCosts += rideCost;
+statsRideCount++;
+
+document.getElementById("stat-km").textContent =
+  "Ubehnuté km spolu: " + statsTotalKm.toFixed(2);
+
+document.getElementById("stat-time").textContent =
+  "Čas jazdy spolu: " + Math.round(statsTotalMinutes) + " min";
+
+document.getElementById("stat-cost").textContent =
+  "Reálna hodnota 1 km: " +
+  (statsTotalCosts / statsTotalKm).toFixed(2) + " €";
     document.getElementById("stat-time").textContent="Čas jazdy: "+(kmWithClient*2).toFixed(0)+" min";
     document.getElementById("stat-cost").textContent="Reálna hodnota 1km: "+(totalCost/(kmToPickup+kmWithClient)).toFixed(2)+" €";
 	document.getElementById("profit").textContent =
@@ -460,7 +480,26 @@ async function calculateRoute(){
 
 document.getElementById("btnStart")?.addEventListener("click",calculateRoute);
 document.getElementById("btnClient")?.addEventListener("click",calculateRoute);
-document.getElementById("btnEnd")?.addEventListener("click",()=>{ alert("Jazda ukončená"); waitTime=0; });
+
+document.getElementById("btnEnd").addEventListener("click", () => {
+  alert("Jazda ukončená. Údaje sa uložili do štatistík.");
+
+  waitTime = 0;
+
+  setTimeout(() => {
+    document.getElementById("pickupAddress").value = "";
+    document.getElementById("dropoffAddress").value = "";
+    document.getElementById("catalogPriceInput").value = "";
+    document.getElementById("costs").textContent = "0 €";
+    document.getElementById("recommended").textContent = "0 €";
+    document.getElementById("catalogPrice").textContent = "0 €";
+    if (routeLayer) {
+      map.removeLayer(routeLayer);
+      routeLayer = null;
+    }
+  }, 15000);
+});
+
 document.getElementById("btnWait")?.addEventListener("click",()=>{ waitTime+=1; alert("Čakanie: "+waitTime+" min"); });
 
 async function suggestAddress(input){

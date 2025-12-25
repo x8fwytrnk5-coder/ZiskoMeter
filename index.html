@@ -643,25 +643,7 @@ function saveClient() {
     return;
   }
 
-  let clients = JSON.parse(localStorage.getItem("clients") || "[]");
-
-  clients.push({
-    phone,
-    pickup,
-    dropoff,
-    saved: new Date().toISOString()
-  });
-
-  localStorage.setItem("clients", JSON.stringify(clients));
-  alert("Klient uložený");
-}
-
-document.getElementById("btnSaveClient")
-  .addEventListener("click", saveClient);  
-
-let rides = []; // pole všetkých jazd
-
-document.getElementById("btnEnd").addEventListener("click", async function(){
+  document.getElementById("btnEnd").addEventListener("click", async function() {
     const pickup = document.getElementById("pickupAddress").value;
     const dropoff = document.getElementById("dropoffAddress").value;
     const kmToPickup = parseFloat(document.getElementById("stat-km").dataset.kmToPickup) || 0;
@@ -674,8 +656,35 @@ document.getElementById("btnEnd").addEventListener("click", async function(){
     // uložiť jazdu
     rides.push({kmToPickup, kmWithClient, costs, catalogPrice, recommended, time});
 
-    // aktualizovať štatistiky
+    // aktualizovať súhrnné štatistiky
     updateStatistics();
+
+    alert("Jazda ukončená. Údaje sa uložili do štatistík.");
+
+    // spusti 15s odpočet pred vymazaním formulára
+    let countdown = 15;
+    const interval = setInterval(() => {
+        document.getElementById("btnEnd").textContent = `Ukončenie jazdy za ${countdown}s`;
+        countdown--;
+        if(countdown < 0){
+            clearInterval(interval);
+            document.getElementById("btnEnd").textContent = "Ukončiť jazdu";
+
+            // vymazať formulár a trasu (marker zostáva)
+            document.getElementById("pickupAddress").value = "";
+            document.getElementById("dropoffAddress").value = "";
+            document.getElementById("catalogPriceInput").value = "";
+            document.getElementById("costs").textContent = "0 €";
+            document.getElementById("recommended").textContent = "0 €";
+            document.getElementById("catalogPrice").textContent = "0 €";
+
+            if(routeLayer){ 
+                map.removeLayer(routeLayer); 
+                routeLayer = null; 
+            }
+        }
+    }, 1000);
+});
 
     // spusti 15s odpočet pred vymazaním formulára
     let countdown = 15;
